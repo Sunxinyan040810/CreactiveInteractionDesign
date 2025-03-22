@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>穿越时空的侦探</title>
+    <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+    <div class="progress">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <div id="gameContainer"></div>
+
+    <script>
+        const gameData = {
+            currentScene: 0,
+            progress: 0,
+            inventory: [],
+            scenes: [
+                { // 场景0：开场
+                    text: "【时空管理局 2097年】<br>监控室突然亮起红色警报：<br>'检测到唐朝长安城时间线异常，请立即前往调查！'",
+                    choices: [
+                        { text: "装备时空穿梭服", next: 1 },
+                        { text: "先检查设备状态", next: 1 }
+                    ]
+                },
+                { // 场景1：穿越准备
+                    text: "穿梭舱准备就绪，倒计时开始：<br>⚡能量核心：100%<br>📡定位坐标：唐朝长安城",
+                    choices: [
+                        { text: "立即启动穿梭", next: 2 },
+                        { text: "调整定位到皇城", next: 3 }
+                    ]
+                },
+                { // 场景2：西市调查
+                    text: "穿越到热闹的长安城，商贩的叫卖声中突然传来尖叫！<br>🔍发现：地上有破碎的琉璃瓶，瓶中还剩余少量香水和...现代电池？",
+                    choices: [
+                        { text: "询问附近商人", next: 4 },
+                        { text: "检测电池成分", next: 5 }
+                    ]
+                },
+                { // 场景3：错误路线
+                    text: "警告！皇城区域有强干扰场！<br>⚡能量核心骤降至30%",
+                    choices: [
+                        { text: "紧急返回基地", next: 0 },
+                        { text: "冒险继续前进", next: 6 }
+                    ]
+                },
+                { // 场景4：商人对话
+                    text: "胡商紧张地说：<br>'刚才有个戴面具的人，说着奇怪的语言，买走了所有铜镜！'",
+                    puzzle: {
+                        question: "唐朝主要使用哪种镜子？",
+                        options: ["铜镜", "玻璃镜", "青铜镜"],
+                        correct: 0,
+                        next: 7
+                    }
+                },
+                { // 场景5：电池分析
+                    text: "检测结果显示：<br>🔋电池生产日期：2095年<br>❗这是现代的科技产物，不该出现在这个时代，难道这个时空是出什么差错了！",
+                    choices: [
+                        { text: "追踪电池信号", next: 8 },
+                        { text: "联系总部支援", next: 9 }
+                    ]
+                },
+                { // 场景6：皇城冒险
+                    text: "你冒险进入皇城，发现一个神秘的时空裂缝！<br>⚡能量核心：10%<br>⚠️警告：能量即将耗尽！",
+                    choices: [
+                        { text: "尝试关闭裂缝", next: 10 },
+                        { text: "返回基地", next: 0 }
+                    ]
+                },
+                { // 场景7：铜镜线索
+                    text: "你确认了铜镜的线索，发现面具人可能来自未来！<br>🔍线索：面具人留下了未来科技的痕迹。",
+                    choices: [
+                        { text: "追踪面具人", next: 11 },
+                        { text: "返回基地报告", next: 0 }
+                    ]
+                },
+                { // 场景8：追踪电池信号
+                    text: "你追踪电池信号，发现信号源来自长安城外的一处废弃寺庙。",
+                    choices: [
+                        { text: "前往寺庙调查", next: 12 },
+                        { text: "返回基地", next: 0 }
+                    ]
+                },
+                { // 场景9：联系总部
+                    text: "你联系了总部，总部派遣了支援小队前来协助。",
+                    choices: [
+                        { text: "等待支援", next: 13 },
+                        { text: "继续调查", next: 2 }
+                    ]
+                },
+                { // 场景10：关闭裂缝
+                    text: "你成功关闭了时空裂缝，但能量核心耗尽了。<br>⚠️警告：你需要立即返回基地！",
+                    choices: [
+                        { text: "启动紧急返回", next: 0 }
+                    ]
+                },
+                { // 场景11：追踪面具人
+                    text: "你追踪面具人，发现他正在试图打开另一个时空裂缝！",
+                    choices: [
+                        { text: "阻止面具人", next: 14 },
+                        { text: "返回基地", next: 0 }
+                    ]
+                },
+                { // 场景12：废弃寺庙
+                    text: "你来到废弃寺庙，发现了一个隐藏的实验室！",
+                    choices: [
+                        { text: "进入实验室", next: 15 },
+                        { text: "返回基地", next: 0 }
+                    ]
+                },
+                { // 场景13：等待支援
+                    text: "支援小队到达，你们一起前往调查时空异常。",
+                    choices: [
+                        { text: "继续调查", next: 2 }
+                    ]
+                },
+                { // 场景14：阻止面具人
+                    text: "你成功阻止了面具人，关闭了时空裂缝，恢复了时间线的稳定。",
+                    choices: [
+                        { text: "返回基地", next: 0 }
+                    ]
+                },
+                { // 场景15：实验室
+                    text: "你进入实验室，发现了大量未来科技设备，成功收集了证据。",
+                    choices: [
+                        { text: "返回基地", next: 0 }
+                    ]
+                }
+            ]
+        };
+
+        function updateProgress() {
+            const progress = (gameData.currentScene / gameData.scenes.length) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+        }
+
+        function renderScene(sceneId) {
+            const container = document.getElementById('gameContainer');
+            const scene = gameData.scenes[sceneId];
+
+            let html = `<div class="scene">
+                <div class="content">${scene.text}</div>
+                <div class="choices">`;
+
+            if (scene.puzzle) {
+                html += `<div class="hint">${scene.puzzle.question}</div>`;
+                scene.puzzle.options.forEach((option, index) => {
+                    html += `<button onclick="checkAnswer(${sceneId}, ${index})">${option}</button>`;
+                });
+            } else {
+                scene.choices.forEach(choice => {
+                    html += `<button onclick="nextScene(${choice.next})">${choice.text}</button>`;
+                });
+            }
+
+            html += `</div></div>`;
+            container.innerHTML = html;
+            container.style.opacity = 0;
+            setTimeout(() => {
+                container.innerHTML = html;
+                container.classList.add('slide-in');
+                container.style.opacity = 1;
+            }, 50);
+
+            setTimeout(() => {
+                container.classList.remove('slide-in');
+            }, 400);
+            updateProgress();
+        }
+
+        function checkAnswer(sceneId, selected) {
+            const puzzle = gameData.scenes[sceneId].puzzle;
+            if (selected === puzzle.correct) {
+                alert("验证正确！");
+                nextScene(puzzle.next);
+            } else {
+                alert("答案错误，请重新思考");
+                renderScene(sceneId);
+            }
+        }
+
+        //通关进度条
+        function nextScene(sceneId) {
+            gameData.currentScene = sceneId;
+            renderScene(sceneId);
+
+            if (sceneId === 14) {
+                document.getElementById('progressBar').style.width = '100%';
+            }
+        }
+
+        renderScene(0);
+        </script>
+</body>
+</html>
